@@ -1,0 +1,853 @@
+# MASTER PROMPT: COMPLETE GROCERY SHOP PRICE MANAGEMENT WEBSITE
+
+## 1. Role and Objective
+
+Act as a senior full-stack web developer, software architect, database engineer, UI/UX designer, and software tester.
+
+Build a complete, professional, responsive, and fully functional **Grocery Shop Price Management Dashboard** for managing grocery products, categories, brands, quantities, selling prices, price-change history, and voice-based product search.
+
+The application must be a real working website, not just a design, static HTML page, or frontend prototype.
+
+The shop owner must be able to add products, edit prices, create categories, search for products using text or voice, and see updated prices immediately across the entire website.
+
+**Critical requirement:** Each product must have one authoritative record in the database. Whenever a product price is changed and saved, every page that displays that product must show the latest price automatically.
+
+Build the complete application inside the currently opened project workspace.
+
+Do not stop after generating a plan or creating the homepage. Implement the entire application, run it, test it, fix errors, and provide instructions for using it.
+
+---
+
+## 2. Recommended Technology Stack
+
+Use the following technology stack unless the existing project requires a compatible alternative.
+
+- Frontend: React with TypeScript.
+- Build tool: Vite.
+- Styling: Tailwind CSS.
+- Icons: Lucide React.
+- Database: Supabase with PostgreSQL.
+- Routing: React Router.
+- Form validation: Zod or an equivalent validation library.
+- Date formatting: A reliable date-formatting library or native date APIs.
+- Voice search: Web Speech API where supported.
+- State management: React Context, Zustand, or another appropriate solution.
+- Notifications: Toast messages for successful operations and errors.
+
+Use a modular, maintainable architecture with reusable components.
+
+Do not introduce unnecessary dependencies or overly complicated infrastructure.
+
+If Supabase credentials are unavailable, implement a clearly separated local development mode using browser storage or IndexedDB so that the website can still be tested. Clearly explain that local development storage does not provide automatic synchronization across devices.
+
+Never expose secret credentials in frontend source code.
+
+---
+
+## 3. Website Layout and Navigation
+
+Create a modern dashboard with a professional grocery-shop management interface.
+
+### Desktop layout
+
+Use a left sidebar containing the navigation menu and a main content area.
+
+The sidebar should include:
+
+1. Home Dashboard
+2. View Grocery Prices
+3. Manage Products
+4. Categories
+5. Voice Search
+6. Price History
+7. Settings
+
+Include a header with:
+- Website name or shop name.
+- Global product search.
+- Current date.
+- User or account menu if authentication is enabled.
+
+### Mobile layout
+
+The website must work properly on Android phones, tablets, laptops, and desktop computers.
+
+On smaller screens:
+- Convert the sidebar into a collapsible navigation menu.
+- Make tables horizontally usable or replace them with responsive cards.
+- Keep search and editing controls accessible.
+- Ensure forms, buttons, and dialogs fit the screen.
+- Support touch interactions.
+
+Use a consistent design system, readable typography, suitable spacing, accessible colors, and clear visual hierarchy.
+
+The interface should be simple enough for a grocery shop owner to use without technical knowledge.
+
+---
+
+## 4. Home Dashboard
+
+Create a home page displaying a summary of the shop's grocery inventory and pricing information.
+
+Include summary cards for:
+
+- Total categories.
+- Total products.
+- Recently updated prices.
+- Number of products with increased prices.
+- Number of products with decreased prices.
+
+Include:
+- Recently changed product prices.
+- A list of recently added products.
+- A quick product search.
+- Category shortcuts.
+- Quick actions for adding products and editing prices.
+
+If charts are useful, show simple price-change or category-distribution charts based on real database data.
+
+Do not display fabricated statistics as real data. Empty states must be shown when no products have been added.
+
+Every dashboard metric must be calculated from the actual stored data.
+
+---
+
+## 5. View Grocery Prices Page
+
+Create a dedicated page for viewing the current prices of all grocery products.
+
+Display products in a clean table on desktop and responsive cards or lists on mobile.
+
+Each product should show:
+
+- Category.
+- Product name.
+- Brand.
+- Package quantity.
+- Unit of measurement.
+- Current selling price.
+- Last price changed date and time.
+
+Example:
+
+| Category | Product | Brand | Quantity | Price |
+|---|---|---|---|---:|
+| Rice | Ponni Rice | Brand A | 1 kg | ₹65 |
+| Rice | Ponni Rice | Brand B | 5 kg | ₹320 |
+| Oil | Sunflower Oil | Brand C | 1 litre | ₹150 |
+| Soap | Bathing Soap | Brand D | 100 g | ₹40 |
+| Flour | Wheat Flour | Brand E | 1 kg | ₹55 |
+
+These are demonstration values only. Clearly identify sample data and allow it to be edited or deleted.
+
+### Category grouping
+
+Display products in the following default order:
+
+1. Rice
+2. Soap
+3. Oil
+4. Flour
+5. Pulses and Dal
+6. Sugar and Salt
+7. Spices and Masala
+8. Snacks and Biscuits
+9. Beverages
+10. Other Grocery Items
+
+Allow users to expand or collapse categories.
+
+Allow the shop owner to create additional categories and change their display order.
+
+Do not permanently restrict the application to these default categories.
+
+### Product display behavior
+
+- Display the current saved price.
+- Display the last actual price-change date and time.
+- Sort products by name, price, or recently updated date.
+- Provide category and brand filters.
+- Provide a search field.
+- Include an Edit action for authorized users.
+- Refresh displayed data when a product is updated.
+- Show a helpful empty state if no matching products exist.
+
+This page is primarily for viewing product information, while product modifications should be managed through the editing interface.
+
+---
+
+## 6. Manage Products and Edit Prices Page
+
+Create a separate page for adding, editing, and deleting grocery products.
+
+### Add product form
+
+Include these fields:
+
+1. Category.
+2. Product name.
+3. Brand name.
+4. Package quantity.
+5. Unit of measurement.
+6. Current selling price in Indian Rupees.
+7. Optional product description.
+8. Optional product code or SKU.
+
+Supported units should include:
+
+- Gram (g).
+- Kilogram (kg).
+- Millilitre (ml).
+- Litre (L).
+- Piece.
+- Packet.
+- Box.
+- Bottle.
+- Dozen.
+- Other custom units.
+
+Allow the shop owner to add, edit, or remove products.
+
+### Editing functionality
+
+For each product, provide:
+- Edit details.
+- Update price.
+- Save changes.
+- Cancel changes.
+- Delete product with confirmation.
+
+Validate all required fields before saving.
+
+Prices must not be negative. Support decimal values where appropriate.
+
+Prevent accidental duplicate products where practical, but allow similar products with different brands, package sizes, or product variations.
+
+### Critical automatic price synchronization
+
+Implement this exact workflow:
+
+1. The shop owner opens Manage Products.
+2. The owner selects Ponni Rice, Brand A, 1 kg.
+3. The existing price is ₹60.
+4. The owner changes the price to ₹65.
+5. The owner clicks Save.
+6. The updated price is persisted in the database.
+7. The View Grocery Prices page shows ₹65.
+8. The Home Dashboard shows ₹65.
+9. Voice Search returns ₹65.
+10. Price History records the change from ₹60 to ₹65.
+
+All pages must read from the same authoritative product record.
+
+Never maintain separate hardcoded price values for different pages.
+
+Use a shared data-access layer and invalidate or refresh relevant queries after successful updates. Where appropriate, use Supabase Realtime or another reliable synchronization mechanism to update open pages and connected devices.
+
+Display a success notification only after the save operation succeeds.
+
+If saving fails, preserve the user's input and show a clear error message.
+
+---
+
+## 7. Category Management
+
+Create a dedicated Category Management page.
+
+Allow the shop owner to:
+
+- Add categories.
+- Rename categories.
+- Change category display order.
+- View the number of products in each category.
+- Open a category to view its products.
+- Delete categories with appropriate confirmation.
+
+Do not silently delete products when a category is removed.
+
+If a category contains products, require the user to reassign those products to another category or explicitly confirm an appropriate alternative.
+
+### Example category structure
+
+Rice:
+- Ponni Rice.
+- Idli Rice.
+- Basmati Rice.
+- Boiled Rice.
+- Raw Rice.
+- Other Rice Varieties.
+
+Oil:
+- Sunflower Oil.
+- Coconut Oil.
+- Groundnut Oil.
+- Sesame Oil.
+- Palm Oil.
+
+Soap:
+- Bathing Soap.
+- Laundry Soap.
+- Dishwashing Soap.
+
+Flour:
+- Wheat Flour.
+- Rice Flour.
+- Gram Flour.
+- Maida.
+
+Each category must support unlimited practical product entries and different brands and package sizes.
+
+The examples above are starter suggestions, not fixed restrictions.
+
+---
+
+## 8. Voice-Based Grocery Search
+
+Implement an actual voice-search feature using the device microphone and speech recognition.
+
+Display a microphone button beside the search field.
+
+### Voice-search workflow
+
+1. The user clicks the microphone button.
+2. The website requests microphone permission when required.
+3. The application listens for the user's speech.
+4. The recognized speech appears as text in the search field.
+5. The application identifies relevant product names, categories, brands, and quantities.
+6. Search the real stored product data.
+7. Display matching products and their current prices.
+8. Allow the user to stop listening or clear the search.
+
+Provide clear visual states:
+- Ready to listen.
+- Listening.
+- Recognized text.
+- Searching.
+- Results found.
+- No results.
+- Permission denied or unsupported browser.
+
+### Example English voice commands
+
+- "Show Ponni Rice."
+- "Find five kilogram Ponni Rice."
+- "Show sunflower oil one litre."
+- "Search Lux soap."
+- "Show wheat flour."
+- "Show all rice products."
+- "Find coconut oil."
+- "Show products in the soap category."
+
+### Tamil and Tamil-English mixed speech
+
+Support English and Tamil where the browser or selected speech-recognition engine supports them.
+
+Examples:
+- "Ponni rice kaattunga."
+- "Rice price sollunga."
+- "Five kilo Ponni rice kaattu."
+- "Coconut oil irukka?"
+- "Soap category kaattu."
+
+Provide an appropriate speech-recognition language selection, such as English (India) and Tamil (India), when supported.
+
+For mixed-language input, normalize recognized words and implement practical matching against product names, brand names, categories, and quantities.
+
+Do not promise perfect recognition for every accent or mixed-language phrase. Browser and device support may vary.
+
+### Search behavior
+
+For example, if the database contains:
+
+- Ponni Rice, Brand A, 1 kg, ₹65.
+- Ponni Rice, Brand A, 5 kg, ₹320.
+- Ponni Rice, Brand B, 1 kg, ₹68.
+- Ponni Rice, Brand C, 10 kg, ₹620.
+
+When the user says "Show Ponni Rice," display all four matching products.
+
+When the user says "Ponni Rice five kilogram," prioritize the matching 5 kg product.
+
+If the user requests a category, show its relevant products.
+
+If no match is found, suggest similar product names or categories.
+
+### Fallback behavior
+
+If speech recognition is unsupported, unavailable, or permission is denied:
+- Keep text search fully functional.
+- Display an informative message.
+- Do not crash the website.
+- Do not display fake voice-search results.
+
+Voice search must use the same current product data as the rest of the website.
+
+---
+
+## 9. Price Change History
+
+Create a Price History page that records all successful product price changes.
+
+For every actual price change, store:
+
+- History ID.
+- Product ID.
+- Product name at the time of the change.
+- Brand.
+- Package quantity.
+- Previous price.
+- New price.
+- Price difference.
+- Change date and time.
+- User who made the change, if authentication is enabled.
+
+Example:
+
+| Product | Previous Price | New Price | Difference |
+|---|---:|---:|---:|
+| Ponni Rice, 1 kg | ₹60 | ₹65 | +₹5 |
+| Sunflower Oil, 1 L | ₹145 | ₹150 | +₹5 |
+| Wheat Flour, 1 kg | ₹55 | ₹52 | -₹3 |
+
+These values are illustrative.
+
+### Price history requirements
+
+- Record history only after a successful price update.
+- Do not create a price-change record when the price has not changed.
+- Preserve historical records if a product is renamed or deleted.
+- Display the actual change date and time.
+- Sort history from newest to oldest by default.
+- Allow filtering by product, category, and date range.
+- Show previous and current prices clearly.
+- Calculate price differences correctly.
+- Prevent ordinary users from editing historical records.
+
+Use the database or server-generated timestamp as the authoritative time when a change is saved.
+
+Store timestamps consistently and display them in the appropriate local time zone, normally Asia/Kolkata for this application.
+
+The product's Last Price Changed field must only update when its price actually changes, not when an unrelated field such as its description is edited.
+
+Where supported, save the product update and price-history entry in one database transaction so that the two records cannot become inconsistent.
+
+---
+
+## 10. Global Search, Filters, and Sorting
+
+Implement a search system accessible from the dashboard and product-view page.
+
+Allow searches by:
+- Product name.
+- Brand name.
+- Category.
+- Package quantity.
+- Unit of measurement.
+- SKU or product code.
+
+Include filters for:
+- Category.
+- Brand.
+- Quantity.
+- Minimum and maximum price.
+- Recently updated products.
+
+Include sorting by:
+- Product name.
+- Price from low to high.
+- Price from high to low.
+- Newest price change.
+- Oldest price change.
+
+Search should be case-insensitive and tolerate reasonable spacing differences.
+
+Implement practical spelling normalization and partial matching where appropriate.
+
+For quantity-aware searches, distinguish between values such as 500 g, 1 kg, and 5 kg.
+
+Provide a clear-search action and a helpful message when there are no results.
+
+---
+
+## 11. Database Design
+
+Create a reliable database schema using PostgreSQL through Supabase.
+
+### Table A: categories
+
+Fields:
+- id: UUID primary key.
+- name: Text, required.
+- display_order: Integer.
+- created_at: Timestamp.
+- updated_at: Timestamp.
+
+### Table B: products
+
+Fields:
+- id: UUID primary key.
+- category_id: UUID foreign key referencing categories.
+- name: Text, required.
+- brand: Text.
+- quantity_value: Numeric, required.
+- quantity_unit: Text, required.
+- price: Numeric, required.
+- sku: Optional text.
+- description: Optional text.
+- created_at: Timestamp.
+- updated_at: Timestamp.
+- last_price_changed_at: Timestamp.
+
+### Table C: price_history
+
+Fields:
+- id: UUID primary key.
+- product_id: UUID, nullable when necessary to preserve history after deletion.
+- product_name_snapshot: Text.
+- brand_snapshot: Text.
+- quantity_snapshot: Text.
+- previous_price: Numeric.
+- new_price: Numeric.
+- price_difference: Numeric.
+- changed_at: Timestamp.
+- changed_by: Optional user ID.
+
+Use appropriate foreign-key rules, indexes, constraints, and numeric types for currency values.
+
+Use a suitable transaction or database function to ensure the product price and its history entry remain consistent.
+
+The price-history record must contain enough snapshot information to remain understandable even if the product is later renamed or deleted.
+
+### Data consistency
+
+- Use stable product IDs.
+- Store the current price in the products table.
+- Store historical changes in the price_history table.
+- Never calculate the current price from an arbitrary historical record.
+- Never hardcode real product prices in UI components.
+- Use one reusable data-access layer for all pages.
+- Use database constraints and server-side validation where appropriate.
+
+### Database deliverables
+
+Generate:
+- SQL schema and migration files.
+- Required indexes and constraints.
+- Appropriate database functions or triggers if needed.
+- Seed data for optional demonstrations.
+- Clear database setup instructions.
+
+Make sure the schema is reproducible on a fresh Supabase project.
+
+---
+
+## 12. Data Persistence and Multi-Device Synchronization
+
+All actual product and category information must be saved persistently.
+
+The website must not lose saved data when:
+- The browser is refreshed.
+- The application is restarted.
+- The user signs out and back in.
+- The user opens the website from another supported device.
+
+Use Supabase as the shared database when configured.
+
+If multiple devices are supported, updates made on one device must become visible on the others without manually re-entering the information.
+
+Implement real-time subscriptions where appropriate, or use reliable query refresh and cache invalidation.
+
+Handle network interruptions and database errors gracefully.
+
+Do not display an update as saved when it has not been successfully persisted.
+
+If offline mode is implemented, distinguish unsaved or locally cached changes from confirmed database changes. Provide an appropriate synchronization strategy rather than silently overwriting newer data.
+
+---
+
+## 13. Authentication and Security
+
+If the application is intended for real shop use, implement simple authentication for the shop owner.
+
+Recommended access model:
+- Owner: Add, edit, and delete products and categories; update prices; view price history.
+- Viewer: View products and search prices without editing.
+
+Protect editing functions using actual authorization rules, not merely by hiding buttons.
+
+Configure Supabase Row Level Security policies where applicable.
+
+Never expose a Supabase service-role key or other secret credentials in frontend code.
+
+Use the publishable or appropriately restricted client key and enforce authorization through database policies.
+
+If authentication is not configured for the initial local demonstration, clearly identify that the application is running in development mode and explain how to enable secure access before production use.
+
+Do not invent credentials or claim that authentication is secure without implementing and testing it.
+
+---
+
+## 14. Settings Page
+
+Create a settings page with suitable options, including:
+
+- Shop name.
+- Currency display: INR (₹).
+- Preferred display settings.
+- Voice-search language selection.
+- Default category order.
+- Optional sample-data reset.
+- Database connection status.
+- Application information.
+
+Keep settings relevant to the grocery shop use case.
+
+Do not include controls that have no working implementation.
+
+---
+
+## 15. User Interface and Interaction Requirements
+
+The entire website must be visually polished and functional.
+
+Implement:
+- Responsive navigation.
+- Consistent tables and cards.
+- Add and edit forms.
+- Validation messages.
+- Confirmation dialogs.
+- Toast notifications.
+- Loading indicators.
+- Empty states.
+- Error states.
+- Search and filter controls.
+- Accessible labels.
+- Keyboard-friendly forms.
+- Clear save and cancel actions.
+- Appropriate visual indicators for increased or decreased prices.
+
+Display currency consistently in Indian Rupees.
+
+Format dates and times clearly, for example:
+
+25 Oct 2026, 07:30 PM
+
+Use the actual saved timestamp, not a hardcoded demonstration date.
+
+Use a microphone icon for voice search and a suitable icon for each navigation section.
+
+The interface must not contain dead buttons, fake search behavior, or navigation links that lead nowhere.
+
+---
+
+## 16. Project Folder and Code Quality
+
+Before writing code:
+
+1. Inspect the existing project directory.
+2. Identify the existing framework and package manager.
+3. Preserve useful existing code.
+4. Identify missing dependencies and configuration.
+5. Plan the implementation briefly.
+6. Start implementing the actual website.
+
+Organize the code into reusable modules, such as:
+
+- `components/`
+- `pages/`
+- `layouts/`
+- `hooks/`
+- `services/`
+- `lib/`
+- `types/`
+- `utils/`
+- `supabase/migrations/`
+
+Use a sensible structure appropriate to the project.
+
+Implement reusable components for:
+- Sidebar and header.
+- Product tables.
+- Product cards.
+- Product forms.
+- Category selectors.
+- Search controls.
+- Voice-search controls.
+- Price-history tables.
+- Confirmation dialogs.
+- Notifications.
+
+Use TypeScript types for categories, products, price-history records, and settings.
+
+Separate UI components from database operations and business logic.
+
+Avoid duplicate code, unnecessary global state, hardcoded credentials, and large components that combine unrelated functionality.
+
+Provide meaningful error messages and handle loading states properly.
+
+---
+
+## 17. Testing Requirements
+
+After implementation, run the application and test the critical workflows.
+
+### Test 1: Category creation
+
+- Add a category named Rice.
+- Verify it appears in Category Management.
+- Verify it can be selected in the product form.
+
+### Test 2: Product creation
+
+- Add Ponni Rice, Brand A, 1 kg, ₹60.
+- Save it.
+- Verify that it appears in the product list and dashboard.
+
+### Test 3: Price update
+
+- Change the product price from ₹60 to ₹65.
+- Save it.
+- Verify that the dashboard, product list, and voice-search results display ₹65.
+- Verify that the last price changed date and time are updated.
+
+### Test 4: Price history
+
+- Verify that the previous price is ₹60.
+- Verify that the new price is ₹65.
+- Verify that the price difference is +₹5.
+- Verify that the timestamp is accurate.
+
+### Test 5: No-change update
+
+- Edit the product description without changing its price.
+- Verify that no false price-history record is created.
+- Verify that the last price changed timestamp remains unchanged.
+
+### Test 6: Multiple brands and quantities
+
+Add:
+- Ponni Rice, Brand A, 1 kg.
+- Ponni Rice, Brand A, 5 kg.
+- Ponni Rice, Brand B, 1 kg.
+
+Verify that each entry has its own independent price.
+
+### Test 7: Search
+
+- Search by product name.
+- Search by brand.
+- Search by category.
+- Search by quantity.
+- Verify that the results match the stored data.
+
+### Test 8: Voice search
+
+- Test the microphone flow in a supported browser.
+- Verify that recognized text searches real products.
+- Verify permission-denied and unsupported-browser behavior.
+- Verify that text search remains available.
+- Test Tamil and English input where supported.
+
+### Test 9: Persistence
+
+- Refresh the website.
+- Verify that products, categories, prices, and history remain saved.
+- If using Supabase, verify that the data is retrieved from the database.
+
+### Test 10: Responsiveness
+
+Test desktop and mobile layouts.
+
+### Test 11: Error handling
+
+Test invalid prices, missing fields, failed saves, and database connection errors.
+
+### Test 12: Security
+
+If authentication is implemented, verify that unauthorized users cannot modify product prices or delete data.
+
+Fix any errors discovered during testing. Do not report a test as passed unless it was actually run successfully.
+
+---
+
+## 18. Run and Deployment Instructions
+
+Prepare the application so that it can be run locally.
+
+Provide the exact commands appropriate for the generated project.
+
+For a typical Vite project, these may include:
+
+```bash
+npm install
+npm run dev
+```
+
+Also configure appropriate scripts for production builds and linting or type checking.
+
+Provide:
+- The project directory structure.
+- Installation instructions.
+- Environment-variable requirements.
+- A `.env.example` file without real secrets.
+- Supabase project creation instructions.
+- Database migration instructions.
+- How to run the website locally.
+- How to build the production version.
+- How to deploy the website.
+- How to configure environment variables in the deployment platform.
+
+If Supabase is unavailable, explain how to run the local development version and its limitations.
+
+Do not claim that the application has been deployed unless deployment was actually completed and verified.
+
+---
+
+## 19. Final Acceptance Criteria
+
+The project is complete only when the following requirements are implemented and verified:
+
+- A working Home Dashboard.
+- A working View Grocery Prices page.
+- A working Manage Products page.
+- A working Category Management page.
+- A working Voice Search page.
+- A working Price History page.
+- A working Settings page.
+- Add, view, edit, and delete operations.
+- Custom categories and category ordering.
+- Multiple brands for the same product.
+- Multiple quantities for the same product.
+- Automatic price synchronization across all pages.
+- Accurate last price changed dates and times.
+- Persistent database storage.
+- Voice search with a functional text-search fallback.
+- Tamil and English voice support where technically available.
+- Responsive mobile and desktop interfaces.
+- Proper validation and error handling.
+- No dead buttons or hardcoded production data.
+- Successful production build.
+- Verified critical workflows.
+- Clear setup and deployment instructions.
+
+## 20. Final Instructions to the AI Coding Agent
+
+Start by inspecting the existing project workspace.
+
+Then create an implementation plan and immediately proceed with coding.
+
+Implement the frontend, backend integration, database schema, navigation, forms, product management, category management, search, voice input, price synchronization, and price history.
+
+Install dependencies when permitted. Run the application, execute available tests, inspect errors, and fix them.
+
+If credentials, permissions, or external services are missing, complete all work that can be performed independently and clearly identify the remaining configuration steps.
+
+Do not stop at a plan, design, mockup, or partial implementation.
+
+Do not replace real functionality with placeholder buttons.
+
+Do not use hardcoded sample data as the permanent database.
+
+Do not fabricate test results.
+
+**Your final deliverable must be a complete, working Grocery Shop Price Management Website with maintainable source code, persistent data storage, accurate price tracking, voice search, and clear instructions for running and deploying it.**
