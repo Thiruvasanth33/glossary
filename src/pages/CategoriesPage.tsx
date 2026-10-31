@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGrocery } from '../context/GroceryContext';
 import { useTranslation } from '../i18n/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { Category } from '../types';
 import { Modal } from '../components/common/Modal';
 import {
@@ -14,12 +15,15 @@ import {
   Package,
   ArrowRight,
   AlertTriangle,
+  Lock,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
   const { categories, products, addCategory, updateCategory, deleteCategory, reorderCategories } = useGrocery();
   const { language, t, getCategoryName } = useTranslation();
+  const { isOwner, openLoginModal } = useAuth();
 
   // Add / Edit Category Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -48,6 +52,10 @@ export const CategoriesPage: React.FC = () => {
 
   // Open Edit Modal
   const openEditModal = (cat: Category) => {
+    if (!isOwner) {
+      openLoginModal();
+      return;
+    }
     setCategoryToEdit(cat);
     setCategoryNameInput(cat.name);
     setCategoryNameTaInput(cat.name_ta || '');
@@ -57,6 +65,10 @@ export const CategoriesPage: React.FC = () => {
 
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isOwner) {
+      openLoginModal();
+      return;
+    }
     const name = categoryNameInput.trim();
     if (!name) {
       setModalError(language === 'ta' ? 'வகையின் பெயர் காலியாக இருக்கக்கூடாது.' : 'Category name cannot be empty.');
@@ -90,6 +102,10 @@ export const CategoriesPage: React.FC = () => {
 
   // Move Category Up or Down
   const handleMoveOrder = async (index: number, direction: 'up' | 'down') => {
+    if (!isOwner) {
+      openLoginModal();
+      return;
+    }
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= categories.length) return;
 
@@ -104,6 +120,10 @@ export const CategoriesPage: React.FC = () => {
 
   // Open Delete Safety Dialog
   const openDeleteDialog = (cat: Category) => {
+    if (!isOwner) {
+      openLoginModal();
+      return;
+    }
     setCategoryToDelete(cat);
     const candidate = categories.find((c) => c.id !== cat.id);
     setReassignTargetCatId(candidate ? candidate.id : '');
@@ -148,18 +168,51 @@ export const CategoriesPage: React.FC = () => {
         <button
           type="button"
           onClick={() => {
+            if (!isOwner) {
+              openLoginModal();
+              return;
+            }
             setCategoryNameInput('');
             setCategoryNameTaInput('');
             setCategoryOrderInput(categories.length + 1);
             setModalError(null);
             setIsAddModalOpen(true);
           }}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors self-start sm:self-auto"
+          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors self-start sm:self-auto font-sans"
         >
           <Plus className="h-4 w-4" />
           <span>{t('categories.addCategory')}</span>
         </button>
       </div>
+
+      {/* Viewer Warning Banner if not logged in as Owner */}
+      {!isOwner && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 flex-shrink-0">
+              <ShieldAlert className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-amber-900 font-sans">
+                {language === 'ta' ? 'பார்வையாளர் முறை (வாசிப்பு மட்டும்)' : 'Viewer Mode (Read-Only)'}
+              </h4>
+              <p className="text-xs text-amber-700 font-sans mt-0.5">
+                {language === 'ta'
+                  ? 'வகைகளைச் சேர்க்க, திருத்த அல்லது வரிசைப்படுத்த கடை உரிமையாளராக உள்நுழையவும்.'
+                  : 'To add, edit, or reorder categories, please unlock Shop Owner mode.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={openLoginModal}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-amber-700 transition-colors flex-shrink-0 font-sans"
+          >
+            <Lock className="h-3.5 w-3.5" />
+            <span>{language === 'ta' ? 'உரிமையாளராக உள்நுழை' : 'Unlock Owner Access'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Categories List Table */}
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">

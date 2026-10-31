@@ -4,7 +4,7 @@ export const en: Translations = {
   nav: {
     dashboard: 'Home Dashboard',
     viewPrices: 'View Grocery Prices',
-    manageProducts: 'Manage Products',
+    manageProducts: 'Edit Prices & Products',
     categories: 'Categories',
     voiceSearch: 'Voice Search',
     priceHistory: 'Price History',

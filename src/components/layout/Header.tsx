@@ -8,11 +8,17 @@ import {
   Plus,
   RefreshCw,
   Globe,
+  Wifi,
+  WifiOff,
+  CloudCog,
 } from 'lucide-react';
 import { useGrocery } from '../../context/GroceryContext';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { VoiceSearchModal } from '../voice/VoiceSearchModal';
 import { ProductFormModal } from '../products/ProductFormModal';
+import { LoginModal } from '../auth/LoginModal';
+import { ShieldCheck, Lock, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   onToggleMobileMenu: () => void;
@@ -20,13 +26,26 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
   const navigate = useNavigate();
-  const { settings, refreshData, isLoading } = useGrocery();
+  const { settings, refreshData, isLoading, syncStatus } = useGrocery();
   const { language, setLanguage, t } = useTranslation();
+  const { isOwner, openLoginModal, logout } = useAuth();
   
   const [globalQuery, setGlobalQuery] = useState('');
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [currentDateFormatted, setCurrentDateFormatted] = useState('');
+  const syncStyles: Record<typeof syncStatus, string> = {
+    Connected: 'bg-sky-50 text-sky-700 border-sky-200',
+    Synchronizing: 'bg-amber-50 text-amber-700 border-amber-200',
+    Synced: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    Offline: 'bg-slate-100 text-slate-600 border-slate-200',
+    'Connection Error': 'bg-red-50 text-red-700 border-red-200',
+  };
+  const SyncIcon = syncStatus === 'Offline'
+    ? WifiOff
+    : syncStatus === 'Synchronizing'
+      ? CloudCog
+      : Wifi;
 
   useEffect(() => {
     const updateTime = () => {
@@ -93,6 +112,15 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
 
         {/* Right Actions: Language Switcher, Date, Refresh, Add Product */}
         <div className="flex items-center gap-1.5 sm:gap-3 pl-2 sm:pl-3 flex-shrink-0">
+          <div
+            className={`hidden sm:inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold ${syncStyles[syncStatus]}`}
+            role="status"
+            aria-live="polite"
+            title={`Database synchronization: ${syncStatus}`}
+          >
+            <SyncIcon className={`h-3.5 w-3.5 ${syncStatus === 'Synchronizing' ? 'animate-pulse' : ''}`} />
+            <span>{syncStatus}</span>
+          </div>
           {/* Visible Language Switcher Pill */}
           <div className="inline-flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-bold shadow-2xs">
             <button
@@ -120,6 +148,40 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
               தமிழ்
             </button>
           </div>
+
+          {/* Auth Role Pill: Owner vs Viewer */}
+          {isOwner ? (
+            <div className="relative group">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-800 border border-emerald-200/80 shadow-2xs hover:bg-emerald-100 transition-colors"
+                title={language === 'ta' ? 'உரிமையாளர் முறை செயலில் உள்ளது' : 'Owner Mode Active'}
+              >
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                <span className="hidden sm:inline">{language === 'ta' ? 'உரிமையாளர்' : 'Owner'}</span>
+              </button>
+              <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-40 bg-white rounded-xl shadow-lg border border-slate-200 p-1 min-w-[130px]">
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg font-semibold transition-colors"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>{language === 'ta' ? 'வெளியேறு' : 'Lock / Logout'}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={openLoginModal}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-2.5 py-1.5 text-xs font-bold text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors shadow-2xs"
+              title={language === 'ta' ? 'உரிமையாளராக உள்நுழைய கிளிக் செய்யவும்' : 'Click to Login as Shop Owner'}
+            >
+              <Lock className="h-3.5 w-3.5 text-amber-600" />
+              <span className="hidden sm:inline">{language === 'ta' ? 'பார்வையாளர்' : 'Viewer'}</span>
+            </button>
+          )}
 
           {/* Current Date Badge */}
           <div className="hidden xl:flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
@@ -151,7 +213,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
           {/* Add Product Button */}
           <button
             type="button"
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              if (isOwner) {
+                setIsAddModalOpen(true);
+              } else {
+                openLoginModal();
+              }
+            }}
             className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-colors flex-shrink-0"
           >
             <Plus className="h-4 w-4" />
@@ -160,6 +228,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
           </button>
         </div>
       </header>
+
+      {/* Login Modal */}
+      <LoginModal />
 
       {/* Voice Search Modal */}
       <VoiceSearchModal

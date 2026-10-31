@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useGrocery } from '../context/GroceryContext';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../i18n/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { testSupabaseConnection, resetSupabaseClient } from '../lib/supabase';
+import { resetRealtimeSubscription } from '../services/groceryService';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import {
   Settings,
@@ -16,12 +18,18 @@ import {
   Save,
   Languages,
   Globe,
+  KeyRound,
+  Lock,
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
   const { settings, updateSettings, resetToSampleData } = useGrocery();
   const { language, setLanguage, t } = useTranslation();
+  const { isOwner, changeOwnerPin, openLoginModal, logout } = useAuth();
   const toast = useToast();
+
+  const [currentPinInput, setCurrentPinInput] = useState('');
+  const [newPinInput, setNewPinInput] = useState('');
 
   // Settings form states
   const [shopName, setShopName] = useState(settings.shop_name);
@@ -62,6 +70,7 @@ export const SettingsPage: React.FC = () => {
       localStorage.removeItem('freshprice_supabase_url');
       localStorage.removeItem('freshprice_supabase_anon_key');
       resetSupabaseClient();
+      resetRealtimeSubscription();
       updateSettings({ db_mode: 'local' });
       setConnResult({
         success: true,
@@ -82,6 +91,7 @@ export const SettingsPage: React.FC = () => {
       localStorage.setItem('freshprice_supabase_url', url);
       localStorage.setItem('freshprice_supabase_anon_key', key);
       resetSupabaseClient();
+      resetRealtimeSubscription();
       updateSettings({
         db_mode: 'supabase',
         supabase_url: url,
@@ -376,6 +386,125 @@ export const SettingsPage: React.FC = () => {
             )}
           </div>
         </form>
+      </div>
+
+      {/* Owner Access & PIN Management */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 font-sans">
+                {language === 'ta' ? 'கடை உரிமையாளர் பாதுகாப்பு & PIN' : 'Shop Owner Security & PIN'}
+              </h3>
+              <p className="text-xs text-slate-500 font-sans">
+                {language === 'ta'
+                  ? 'விலைகளைத் திருத்தவும், சாதனங்களை நிர்வகிக்கவும் 4-இலக்க PIN குறியீடு.'
+                  : 'Protect price editing and inventory management across all devices.'}
+              </p>
+            </div>
+          </div>
+
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+              isOwner
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}
+          >
+            {isOwner ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> : <Lock className="h-3.5 w-3.5 text-amber-600" />}
+            <span>{isOwner ? (language === 'ta' ? 'உரிமையாளர் முறை செயலில் உள்ளது' : 'Owner Mode Unlocked') : (language === 'ta' ? 'பார்வையாளர் முறை (வாசிப்பு மட்டும்)' : 'Viewer Mode (Read-Only)')}</span>
+          </span>
+        </div>
+
+        {isOwner ? (
+          <div className="space-y-4 max-w-xl">
+            <div className="rounded-2xl bg-emerald-50/70 p-4 border border-emerald-200 text-xs text-emerald-800 flex items-center justify-between">
+              <span>{language === 'ta' ? 'நீங்கள் உரிமையாளராக உள்நுழைந்துள்ளீர்கள். விலைகளைத் திருத்த முழு அனுமதி உள்ளது.' : 'You have full authorization to edit prices, quantities, and products.'}</span>
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-lg bg-white px-3 py-1.5 font-bold text-rose-600 border border-emerald-200 hover:bg-rose-50 transition-colors shadow-2xs flex-shrink-0 ml-3"
+              >
+                {language === 'ta' ? 'வெளியேறு' : 'Lock / Logout'}
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const res = changeOwnerPin(currentPinInput, newPinInput);
+                if (res.success) {
+                  setCurrentPinInput('');
+                  setNewPinInput('');
+                } else {
+                  toast.error('PIN Error', res.message);
+                }
+              }}
+              className="space-y-3 pt-2"
+            >
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider font-sans">
+                {language === 'ta' ? 'PIN குறியீட்டை மாற்றவும்' : 'Change Owner PIN'}
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 mb-1 font-sans">
+                    {language === 'ta' ? 'தற்போதைய PIN' : 'Current PIN'}
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={8}
+                    value={currentPinInput}
+                    onChange={(e) => setCurrentPinInput(e.target.value)}
+                    placeholder="••••"
+                    className="w-full rounded-xl border border-slate-300 py-2 px-3 text-sm font-mono text-slate-900 focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 mb-1 font-sans">
+                    {language === 'ta' ? 'புதிய 4-இலக்க PIN' : 'New 4-Digit PIN'}
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={8}
+                    value={newPinInput}
+                    onChange={(e) => setNewPinInput(e.target.value)}
+                    placeholder="••••"
+                    className="w-full rounded-xl border border-slate-300 py-2 px-3 text-sm font-mono text-slate-900 focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-900 transition-colors"
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                <span>{language === 'ta' ? 'புதிய PIN சேமி' : 'Save New PIN'}</span>
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-200">
+            <div>
+              <p className="text-xs font-bold text-slate-700 font-sans">
+                {language === 'ta' ? 'கடை உரிமையாளர் PIN கொண்டு திறக்கவும்' : 'Unlock with Shop Owner PIN'}
+              </p>
+              <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                {language === 'ta' ? 'இயல்புநிலை PIN குறியீடு: 1234' : 'Default factory PIN is 1234'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={openLoginModal}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-2xs self-start sm:self-auto font-sans"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              <span>{language === 'ta' ? 'PIN உள்ளிட்டு திறக்கவும்' : 'Enter PIN to Unlock'}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Database Maintenance & Catalog Reset */}

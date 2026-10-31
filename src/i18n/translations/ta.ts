@@ -3,8 +3,8 @@ import { Translations } from '../types';
 export const ta: Translations = {
   nav: {
     dashboard: 'முகப்புப் பலகை',
-    viewPrices: 'மளிகைப் பொருட்கள் விலை',
-    manageProducts: 'தயாரிப்புகள் மேலாண்மை',
+    viewPrices: 'மளிகைப் பொருட்கள் விலை (பார்வை)',
+    manageProducts: 'விலைகள் & பொருட்கள் திருத்தம்',
     categories: 'பொருட்கள் வகைகள்',
     voiceSearch: 'குரல் வழி தேடல்',
     priceHistory: 'விலை மாற்ற வரலாறு',
