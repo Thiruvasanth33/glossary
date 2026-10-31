@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Category, Product, PriceHistory, ShopSettings } from '../types';
-import { groceryService, subscribeToDataChanges, getLocalSettings, setLocalSettings } from '../services/groceryService';
+import { groceryService, subscribeToDataChanges, getLocalSettings, setLocalSettings, SyncStatus } from '../services/groceryService';
 import { useToast } from './ToastContext';
 import { formatCurrency } from '../utils/formatters';
 
@@ -10,6 +10,7 @@ interface GroceryContextType {
   priceHistory: PriceHistory[];
   settings: ShopSettings;
   isLoading: boolean;
+  syncStatus: SyncStatus;
   // Category operations
   addCategory: (name: string, displayOrder?: number) => Promise<Category>;
   updateCategory: (id: string, updates: Partial<Category>) => Promise<Category>;
@@ -21,7 +22,7 @@ interface GroceryContextType {
   updateProductPrice: (id: string, newPrice: number) => Promise<{ product: Product; changed: boolean }>;
   deleteProduct: (id: string) => Promise<void>;
   // Settings operations
-  updateSettings: (updates: Partial<ShopSettings>) => void;
+  updateSettings: (updates: Partial<ShopSettings>) => Promise<void>;
   resetToSampleData: () => Promise<void>;
   refreshData: () => Promise<void>;
 }
@@ -34,6 +35,7 @@ export const GroceryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
   const [settings, setSettings] = useState<ShopSettings>(getLocalSettings);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('Connected');
 
   const toast = useToast();
 
@@ -47,6 +49,8 @@ export const GroceryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setCategories(cats);
       setProducts(prods);
       setPriceHistory(hist);
+      const cloudSettings = await groceryService.getSettings();
+      setSettings(cloudSettings);
     } catch (err: any) {
       console.error('Failed to load grocery data:', err);
       toast.error('Data Loading Error', err?.message || 'Failed to sync grocery database');
@@ -62,10 +66,19 @@ export const GroceryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Listen for changes from other tabs or local operations
     const unsubscribe = subscribeToDataChanges(() => {
       loadAllData();
+    }, (status) => {
+      setSyncStatus(navigator.onLine ? status : 'Offline');
     });
+
+    const handleOnline = () => setSyncStatus('Connected');
+    const handleOffline = () => setSyncStatus('Offline');
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
       unsubscribe();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, [loadAllData]);
 
@@ -188,10 +201,11 @@ export const GroceryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // SETTINGS OPERATIONS
-  const updateSettings = (updates: Partial<ShopSettings>) => {
+  const updateSettings = async (updates: Partial<ShopSettings>) => {
     const updated = { ...settings, ...updates };
-    setSettings(updated);
     setLocalSettings(updated);
+    await groceryService.updateSettings(updated);
+    setSettings(updated);
     toast.success('Settings Saved', 'Shop configuration has been updated.');
   };
 
@@ -219,6 +233,7 @@ export const GroceryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         priceHistory,
         settings,
         isLoading,
+        syncStatus,
         addCategory,
         updateCategory,
         deleteCategory,

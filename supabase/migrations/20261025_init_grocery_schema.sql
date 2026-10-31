@@ -160,9 +160,19 @@ CREATE POLICY "Allow public read on price_history" ON price_history FOR SELECT U
 CREATE POLICY "Allow public insert on price_history" ON price_history FOR INSERT WITH CHECK (true);
 
 -- 7. Realtime Enablement
-ALTER PUBLICATION supabase_realtime ADD TABLE categories;
-ALTER PUBLICATION supabase_realtime ADD TABLE products;
-ALTER PUBLICATION supabase_realtime ADD TABLE price_history;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'categories') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE categories;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'products') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE products;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'price_history') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE price_history;
+    END IF;
+END
+$$;
 
 -- 8. Starter Seed Data (Standard 10 Categories)
 INSERT INTO categories (id, name, display_order)

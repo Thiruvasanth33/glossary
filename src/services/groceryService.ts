@@ -20,13 +20,86 @@ try {
   // BroadcastChannel might be restricted in some iframe contexts
 }
 
+export type SyncStatus = 'Connected' | 'Synchronizing' | 'Synced' | 'Offline' | 'Connection Error';
 type SyncCallback = (event: { type: 'CATEGORIES' | 'PRODUCTS' | 'PRICE_HISTORY' | 'ALL' }) => void;
 const syncListeners: Set<SyncCallback> = new Set();
+let realtimeChannel: ReturnType<NonNullable<ReturnType<typeof getSupabase>>['channel']> | null = null;
+let realtimeSubscriberCount = 0;
 
-export function subscribeToDataChanges(callback: SyncCallback): () => void {
+export function resetRealtimeSubscription() {
+  if (realtimeChannel) {
+    try {
+      getSupabase()?.removeChannel(realtimeChannel);
+    } catch {
+      // ignore
+    }
+    realtimeChannel = null;
+    realtimeSubscriberCount = 0;
+  }
+}
+
+export function subscribeToDataChanges(callback: SyncCallback, statusCallback?: (status: SyncStatus) => void): () => void {
   syncListeners.add(callback);
+  realtimeSubscriberCount += 1;
+
+  const initChannel = () => {
+    const supabase = getSupabase();
+    if (supabase && !realtimeChannel) {
+      statusCallback?.('Synchronizing');
+      realtimeChannel = supabase
+        .channel('grocery-dashboard-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+          statusCallback?.('Synchronizing');
+          callback({ type: 'CATEGORIES' });
+          setTimeout(() => statusCallback?.('Synced'), 500);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+          statusCallback?.('Synchronizing');
+          callback({ type: 'PRODUCTS' });
+          setTimeout(() => statusCallback?.('Synced'), 500);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'price_history' }, () => {
+          statusCallback?.('Synchronizing');
+          callback({ type: 'PRICE_HISTORY' });
+          setTimeout(() => statusCallback?.('Synced'), 500);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
+          statusCallback?.('Synchronizing');
+          callback({ type: 'ALL' });
+          setTimeout(() => statusCallback?.('Synced'), 500);
+        })
+        .subscribe((channelStatus) => {
+          if (channelStatus === 'SUBSCRIBED') {
+            statusCallback?.('Synced');
+          } else if (channelStatus === 'CHANNEL_ERROR' || channelStatus === 'TIMED_OUT') {
+            statusCallback?.('Connection Error');
+          } else if (channelStatus === 'CLOSED') {
+            statusCallback?.('Offline');
+          } else {
+            statusCallback?.('Connected');
+          }
+        });
+    } else if (!supabase) {
+      statusCallback?.('Offline');
+    } else {
+      statusCallback?.('Connected');
+    }
+  };
+
+  initChannel();
+
   return () => {
     syncListeners.delete(callback);
+    realtimeSubscriberCount -= 1;
+    if (realtimeSubscriberCount <= 0 && realtimeChannel) {
+      try {
+        getSupabase()?.removeChannel(realtimeChannel);
+      } catch {
+        // ignore
+      }
+      realtimeChannel = null;
+      realtimeSubscriberCount = 0;
+    }
   };
 }
 
@@ -125,6 +198,40 @@ export function setLocalSettings(settings: ShopSettings) {
 }
 
 export const groceryService = {
+  async getSettings(): Promise<ShopSettings> {
+    const supabase = getSupabase();
+    if (!supabase) return getLocalSettings();
+    try {
+      const { data, error } = await supabase.from('settings').select('*').eq('id', 'shop').single();
+      if (error) return getLocalSettings();
+      return data ? {
+        shop_name: data.shop_name,
+        currency_symbol: data.currency_symbol,
+        currency_code: data.currency_code,
+        default_voice_language: data.default_voice_language,
+        db_mode: data.db_mode,
+        user_role: data.user_role,
+        language: data.language,
+      } : getLocalSettings();
+    } catch {
+      return getLocalSettings();
+    }
+  },
+
+  async updateSettings(settings: ShopSettings): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) {
+      setLocalSettings(settings);
+      return;
+    }
+    const { error } = await supabase.from('settings').upsert({
+      id: 'shop',
+      ...settings,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw new Error(error.message);
+  },
+
   // -------------------------------------------------------------
   // Categories
   // -------------------------------------------------------------
@@ -136,11 +243,12 @@ export const groceryService = {
           .from('categories')
           .select('*')
           .order('display_order', { ascending: true });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as Category[];
         }
-      } catch (err) {
-        console.warn('Falling back to local categories:', err);
+        throw new Error(error?.message || 'Failed to load categories');
+      } catch (err: any) {
+        throw new Error(err?.message || 'Failed to load categories from Supabase');
       }
     }
     return getLocalCategories().sort((a, b) => a.display_order - b.display_order);
@@ -176,8 +284,9 @@ export const groceryService = {
           notifyDataChange('CATEGORIES');
           return data as Category;
         }
+        throw new Error(error?.message || 'Supabase rejected the category insert');
       } catch (err) {
-        console.warn('Supabase addCategory failed, saving locally:', err);
+        throw new Error(err instanceof Error ? err.message : 'Supabase category insert failed');
       }
     }
 
@@ -204,8 +313,9 @@ export const groceryService = {
           notifyDataChange('CATEGORIES');
           return data as Category;
         }
+        throw new Error(error?.message || 'Supabase rejected the category update');
       } catch (err) {
-        console.warn('Supabase updateCategory failed:', err);
+        throw new Error(err instanceof Error ? err.message : 'Supabase category update failed');
       }
     }
 
@@ -240,10 +350,11 @@ export const groceryService = {
     if (supabase) {
       try {
         for (const cat of reordered) {
-          await supabase.from('categories').update({ display_order: cat.display_order }).eq('id', cat.id);
+          const { error } = await supabase.from('categories').update({ display_order: cat.display_order }).eq('id', cat.id);
+          if (error) throw new Error(error.message);
         }
       } catch (e) {
-        console.warn('Failed to update category order in Supabase:', e);
+        throw new Error(e instanceof Error ? e.message : 'Failed to save category order');
       }
     }
 
@@ -268,10 +379,13 @@ export const groceryService = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        await supabase.from('categories').delete().eq('id', id);
+        const { error } = await supabase.from('categories').delete().eq('id', id);
+        if (error) throw new Error(error.message);
       } catch (err) {
-        console.warn('Supabase deleteCategory error:', err);
+        throw new Error(err instanceof Error ? err.message : 'Supabase category delete failed');
       }
+      notifyDataChange('CATEGORIES');
+      return;
     }
 
     const list = getLocalCategories().filter((c) => c.id !== id);
@@ -287,11 +401,16 @@ export const groceryService = {
     if (supabase) {
       try {
         const { data, error } = await supabase.from('products').select('*').order('name', { ascending: true });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
+          setLocalProducts(data as Product[]);
           return data as Product[];
         }
-      } catch (err) {
-        console.warn('Falling back to local products:', err);
+        throw new Error(error?.message || 'Failed to load products');
+      } catch (err: any) {
+        console.warn('Supabase getProducts failed, using local cache:', err);
+        const cached = getLocalProducts();
+        if (cached && cached.length > 0) return cached;
+        throw new Error(err?.message || 'Failed to load products from Supabase');
       }
     }
     return getLocalProducts();
@@ -325,8 +444,9 @@ export const groceryService = {
           notifyDataChange('PRODUCTS');
           return data as Product;
         }
+        throw new Error(error?.message || 'Supabase rejected the product insert');
       } catch (err) {
-        console.warn('Supabase addProduct failed, falling back to local:', err);
+        throw new Error(err instanceof Error ? err.message : 'Supabase product insert failed');
       }
     }
 
@@ -338,8 +458,16 @@ export const groceryService = {
   },
 
   async updateProduct(id: string, updates: Partial<Product>, changedBy = 'Shop Owner'): Promise<Product> {
-    const products = getLocalProducts();
-    const currentProduct = products.find((p) => p.id === id);
+    const supabase = getSupabase();
+    let currentProduct: Product | undefined;
+
+    if (supabase) {
+      const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+      if (error) throw new Error(error.message);
+      currentProduct = data as Product;
+    } else {
+      currentProduct = getLocalProducts().find((p) => p.id === id);
+    }
     if (!currentProduct) {
       throw new Error('Product not found');
     }
@@ -348,7 +476,7 @@ export const groceryService = {
     const hasPriceChanged = updates.price !== undefined && updates.price !== currentProduct.price;
 
     // Build update object
-    const updatedProduct: Product = {
+    let updatedProduct: Product = {
       ...currentProduct,
       ...updates,
       updated_at: now,
@@ -382,34 +510,45 @@ export const groceryService = {
       setLocalPriceHistory(historyList);
     }
 
-    // Update in local array
-    const idx = products.findIndex((p) => p.id === id);
-    products[idx] = updatedProduct;
-    setLocalProducts(products);
-
-    // Try Supabase if available
-    const supabase = getSupabase();
     if (supabase) {
-      try {
-        await supabase.from('products').update(updatedProduct).eq('id', id);
-        if (hasPriceChanged) {
-          const qtyStr = `${currentProduct.quantity_value} ${currentProduct.quantity_unit}`;
+      const updatePayload: any = { ...updates, updated_at: now };
+      if (hasPriceChanged) updatePayload.last_price_changed_at = now;
+
+      const { data, error } = await supabase
+        .from('products')
+        .update(updatePayload)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      updatedProduct = data as Product;
+
+      if (hasPriceChanged) {
+        const qtyStr = `${currentProduct.quantity_value} ${currentProduct.quantity_unit}`;
+        try {
           await supabase.from('price_history').insert({
+            id: generateUUID(),
             product_id: currentProduct.id,
-            product_name_snapshot: currentProduct.name,
-            brand_snapshot: currentProduct.brand || '',
+            product_name_snapshot: updatedProduct.name,
+            product_name_snapshot_ta: updatedProduct.name_ta || null,
+            brand_snapshot: updatedProduct.brand || '',
             quantity_snapshot: qtyStr,
             previous_price: currentProduct.price,
-            new_price: updates.price,
+            new_price: updates.price!,
             price_difference: updates.price! - currentProduct.price,
             changed_at: now,
             changed_by: changedBy,
           });
+        } catch (histErr) {
+          console.warn('Supabase price_history insert warning:', histErr);
         }
-      } catch (err) {
-        console.warn('Supabase update failed:', err);
       }
     }
+
+    const products = getLocalProducts();
+    const idx = products.findIndex((p) => p.id === id);
+    if (idx >= 0) products[idx] = updatedProduct;
+    setLocalProducts(products);
 
     notifyDataChange('PRODUCTS');
     if (hasPriceChanged) {
@@ -424,8 +563,15 @@ export const groceryService = {
       throw new Error('Valid non-negative price required');
     }
 
-    const products = getLocalProducts();
-    const current = products.find((p) => p.id === id);
+    const supabase = getSupabase();
+    let current: Product | undefined;
+    if (supabase) {
+      const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+      if (error) throw new Error(error.message);
+      current = data as Product;
+    } else {
+      current = getLocalProducts().find((p) => p.id === id);
+    }
     if (!current) {
       throw new Error('Product not found');
     }
@@ -446,10 +592,13 @@ export const groceryService = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        await supabase.from('products').delete().eq('id', id);
+        const { error } = await supabase.from('products').delete().eq('id', id);
+        if (error) throw new Error(error.message);
       } catch (e) {
-        console.warn('Supabase delete product failed:', e);
+        throw new Error(e instanceof Error ? e.message : 'Supabase product delete failed');
       }
+      notifyDataChange('PRODUCTS');
+      return;
     }
 
     const list = getLocalProducts().filter((p) => p.id !== id);
@@ -468,11 +617,12 @@ export const groceryService = {
           .from('price_history')
           .select('*')
           .order('changed_at', { ascending: false });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as PriceHistory[];
         }
-      } catch (err) {
-        console.warn('Falling back to local price history:', err);
+        throw new Error(error?.message || 'Failed to load price history');
+      } catch (err: any) {
+        throw new Error(err?.message || 'Failed to load price history from Supabase');
       }
     }
     return getLocalPriceHistory().sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime());
