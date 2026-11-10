@@ -8,9 +8,9 @@ export const AppLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
+    <div className="flex h-screen w-full overflow-hidden" style={{background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8f9ff 100%)'}}>
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      <div className="hidden lg:flex lg:flex-shrink-0 shadow-2xl">
         <Sidebar />
       </div>
 
@@ -18,16 +18,16 @@ export const AppLayout: React.FC = () => {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in"
+            className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity animate-in fade-in"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="relative flex w-72 flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-200">
+          <div className="relative flex w-72 flex-col bg-slate-900 shadow-2xl animate-in slide-in-from-left duration-200">
             <div className="absolute right-3 top-4">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />

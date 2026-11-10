@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-3 sm:px-6 backdrop-blur">
+      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/60 bg-white/90 px-3 sm:px-6 backdrop-blur-md shadow-sm shadow-slate-100/80">
         {/* Left: Mobile hamburger & Global Search */}
         <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-xl">
           <button
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
                 value={globalQuery}
                 onChange={(e) => setGlobalQuery(e.target.value)}
                 placeholder={t('header.searchPlaceholder')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2 pl-9 pr-11 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-2 pl-9 pr-11 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all font-sans"
               />
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
 
@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
               <button
                 type="button"
                 onClick={() => setIsVoiceModalOpen(true)}
-                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-colors"
                 title={t('header.voiceTitle')}
               >
                 <Mic className="h-4 w-4" />
@@ -122,13 +122,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
             <span>{syncStatus}</span>
           </div>
           {/* Visible Language Switcher Pill */}
-          <div className="inline-flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-bold shadow-2xs">
+          <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1 border border-slate-200 text-xs font-bold shadow-sm">
             <button
               type="button"
               onClick={() => setLanguage('en')}
-              className={`rounded-lg px-2.5 py-1 transition-all ${
+              className={`rounded-xl px-2.5 py-1 transition-all ${
                 language === 'en'
-                  ? 'bg-emerald-600 text-white shadow-xs'
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Switch to English"
@@ -138,9 +138,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
             <button
               type="button"
               onClick={() => setLanguage('ta')}
-              className={`rounded-lg px-2.5 py-1 transition-all font-sans ${
+              className={`rounded-xl px-2.5 py-1 transition-all font-sans ${
                 language === 'ta'
-                  ? 'bg-emerald-600 text-white shadow-xs'
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
               title="தமிழுக்கு மாறுக (Switch to Tamil)"
@@ -154,10 +154,10 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
             <div className="relative group">
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-800 border border-emerald-200/80 shadow-2xs hover:bg-emerald-100 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-violet-50 px-2.5 py-1.5 text-xs font-bold text-violet-800 border border-violet-200/80 shadow-sm hover:bg-violet-100 transition-colors"
                 title={language === 'ta' ? 'உரிமையாளர் முறை செயலில் உள்ளது' : 'Owner Mode Active'}
               >
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                <ShieldCheck className="h-3.5 w-3.5 text-violet-600" />
                 <span className="hidden sm:inline">{language === 'ta' ? 'உரிமையாளர்' : 'Owner'}</span>
               </button>
               <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-40 bg-white rounded-xl shadow-lg border border-slate-200 p-1 min-w-[130px]">
@@ -204,9 +204,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
           <button
             type="button"
             onClick={() => setIsVoiceModalOpen(true)}
-            className="hidden md:inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors border border-emerald-200/80 shadow-2xs"
+            className="hidden md:inline-flex items-center gap-1.5 rounded-2xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors border border-rose-200/80 shadow-sm"
           >
-            <Mic className="h-3.5 w-3.5 text-emerald-600 animate-pulse" />
+            <Mic className="h-3.5 w-3.5 text-rose-500 animate-pulse" />
             <span>{t('header.voiceSearch')}</span>
           </button>
 
@@ -220,7 +220,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
                 openLoginModal();
               }
             }}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-colors flex-shrink-0"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-violet-500/25 hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 transition-all flex-shrink-0"
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">{t('header.addProduct')}</span>

@@ -24,37 +24,50 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const schemeStyles = {
     emerald: {
-      bg: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-      ring: 'group-hover:border-emerald-300',
+      iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+      iconShadow: 'shadow-emerald-500/30',
+      border: 'hover:border-emerald-200',
+      accent: 'bg-emerald-50',
     },
     blue: {
-      bg: 'bg-blue-50 text-blue-600 border-blue-100',
-      ring: 'group-hover:border-blue-300',
+      iconBg: 'bg-gradient-to-br from-sky-500 to-blue-600',
+      iconShadow: 'shadow-sky-500/30',
+      border: 'hover:border-sky-200',
+      accent: 'bg-sky-50',
     },
     rose: {
-      bg: 'bg-rose-50 text-rose-600 border-rose-100',
-      ring: 'group-hover:border-rose-300',
+      iconBg: 'bg-gradient-to-br from-rose-500 to-pink-600',
+      iconShadow: 'shadow-rose-500/30',
+      border: 'hover:border-rose-200',
+      accent: 'bg-rose-50',
     },
     amber: {
-      bg: 'bg-amber-50 text-amber-600 border-amber-100',
-      ring: 'group-hover:border-amber-300',
+      iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',
+      iconShadow: 'shadow-amber-500/30',
+      border: 'hover:border-amber-200',
+      accent: 'bg-amber-50',
     },
     purple: {
-      bg: 'bg-purple-50 text-purple-600 border-purple-100',
-      ring: 'group-hover:border-purple-300',
+      iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
+      iconShadow: 'shadow-violet-500/30',
+      border: 'hover:border-violet-200',
+      accent: 'bg-violet-50',
     },
   }[colorScheme];
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md ${schemeStyles.ring}`}
+      className={`group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${schemeStyles.border}`}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+      {/* Subtle top gradient strip */}
+      <div className={`absolute top-0 left-0 right-0 h-0.5 ${schemeStyles.iconBg} opacity-60`} />
+
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0 pr-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{title}</p>
+          <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">{value}</p>
         </div>
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl border ${schemeStyles.bg}`}>
+        <div className={`flex h-13 w-13 flex-shrink-0 items-center justify-center rounded-2xl ${schemeStyles.iconBg} text-white shadow-lg ${schemeStyles.iconShadow}`}>
           <Icon className="h-6 w-6" />
         </div>
       </div>
@@ -64,7 +77,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           {subtitle && <span>{subtitle}</span>}
           {trend && (
             <span
-              className={`font-semibold ${
+              className={`font-bold ${
                 trend.isNeutral
                   ? 'text-slate-600'
                   : trend.isPositive

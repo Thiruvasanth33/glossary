@@ -105,16 +105,16 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Top Banner / Welcome & Quick Action Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 p-6 md:p-8 text-white shadow-xl shadow-emerald-950/10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-violet-700 via-indigo-700 to-purple-800 p-6 md:p-8 text-white shadow-xl shadow-violet-950/15">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600/60 px-3 py-1 text-xs font-semibold backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-200" />
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur border border-white/20">
+            <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
             <span>{t('dashboard.badge')}</span>
           </div>
-          <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h2 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             {settings.shop_name}
           </h2>
-          <p className="mt-1 text-xs sm:text-sm text-emerald-100 max-w-xl">
+          <p className="mt-1 text-xs sm:text-sm text-violet-200 max-w-xl">
             {t('dashboard.subtitle')}
           </p>
         </div>
@@ -126,15 +126,15 @@ export const DashboardPage: React.FC = () => {
             onClick={() => setIsVoiceModalOpen(true)}
             className="inline-flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur transition-all"
           >
-            <Mic className="h-4 w-4 text-emerald-300 animate-pulse" />
+            <Mic className="h-4 w-4 text-rose-300 animate-pulse" />
             <span>{t('header.voiceSearch')}</span>
           </button>
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-emerald-800 shadow-md hover:bg-emerald-50 transition-all"
+            className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-violet-700 shadow-md hover:bg-violet-50 transition-all"
           >
-            <Plus className="h-4 w-4 text-emerald-700" />
+            <Plus className="h-4 w-4 text-violet-600" />
             <span>{t('header.addProduct')}</span>
           </button>
         </div>
@@ -180,7 +180,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Quick Search Widget */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <h3 className="text-base font-bold text-slate-900">{t('dashboard.instantPriceChecker')}</h3>
@@ -188,7 +188,7 @@ export const DashboardPage: React.FC = () => {
           </div>
           <button
             onClick={() => navigate('/prices')}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 self-start"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-600 hover:text-violet-700 self-start"
           >
             <span>{t('dashboard.viewFullPriceList')}</span>
             <ArrowRight className="h-3.5 w-3.5" />
@@ -201,13 +201,13 @@ export const DashboardPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('dashboard.quickSearchPlaceholder')}
-            className="w-full rounded-2xl border border-slate-300 py-3 pl-10 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-sans"
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50/60 py-3 pl-10 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/20 font-sans transition-all"
           />
           <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
           <button
             type="button"
             onClick={() => setIsVoiceModalOpen(true)}
-            className="absolute right-2 top-2 p-1.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+            className="absolute right-2 top-2 p-1.5 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors"
             title={t('header.voiceTitle')}
           >
             <Mic className="h-4 w-4" />
@@ -228,7 +228,7 @@ export const DashboardPage: React.FC = () => {
                   return (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-emerald-50/50 hover:border-emerald-300 transition-all"
+                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-violet-50/50 hover:border-violet-200 transition-all"
                     >
                       <div>
                         <h5 className="text-xs font-bold text-slate-900">{displayProdName}</h5>
@@ -240,13 +240,13 @@ export const DashboardPage: React.FC = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <span className="text-sm font-extrabold text-emerald-600">
+                        <span className="text-sm font-black text-violet-600">
                           {formatCurrency(p.price, settings.currency_symbol)}
                         </span>
                         <button
                           type="button"
                           onClick={() => setSelectedProductForPrice(p)}
-                          className="block text-[10px] text-emerald-700 hover:underline font-semibold mt-0.5"
+                          className="block text-[10px] text-violet-600 hover:underline font-semibold mt-0.5"
                         >
                           {t('dashboard.editPrice')}
                         </button>
@@ -263,11 +263,11 @@ export const DashboardPage: React.FC = () => {
       {/* Two Column Layout: Recently Changed Prices vs Recently Added Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recently Changed Product Prices */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/25">
                   <History className="h-5 w-5" />
                 </div>
                 <div>
@@ -278,7 +278,7 @@ export const DashboardPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate('/history')}
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                className="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1"
               >
                 <span>{t('dashboard.viewAll')}</span>
                 <ArrowRight className="h-3 w-3" />
@@ -336,11 +336,11 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Recently Added Products */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25">
                   <PackageCheck className="h-5 w-5" />
                 </div>
                 <div>
@@ -351,7 +351,7 @@ export const DashboardPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate('/products')}
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                className="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1"
               >
                 <span>{t('dashboard.manage')}</span>
                 <ArrowRight className="h-3 w-3" />
